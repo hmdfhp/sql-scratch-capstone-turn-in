@@ -1,0 +1,33 @@
+select count(distinct utm_campaign) as 'Number of Campaigns' from page_visits;
+
+select count(distinct utm_source) as 'Number of Sources' from page_visits;
+
+select distinct utm_campaign as 'Campaign Name', utm_source as 'Source Name' from page_visits;
+
+select distinct page_name as 'Page Name' from page_visits;
+
+select count(distinct user_id) as 'Visitor Purchase Count' from page_visits where page_name = '4 - purchase';
+
+
+WITH last_touch AS (
+    SELECT user_id,
+        MAX(timestamp) as last_touch_at
+    FROM page_visits where page_name = '4 - purchase'
+    GROUP BY user_id),
+
+ft_attr as (
+	select lt.user_id,
+				 lt.last_touch_at,
+				 pv.utm_source,
+				 pv.utm_campaign
+	from last_touch lt
+	join page_visits pv
+		on lt.user_id =pv.user_id
+		and lt.last_touch_at = pv.timestamp)    
+
+SELECT ft_attr.utm_source as Source,
+			 ft_attr.utm_campaign as Campaign,
+       count(*) as Count
+FROM ft_attr
+group by 1, 2
+order by 3 desc;
